@@ -32,14 +32,17 @@ class mainWindow(QMainWindow):
 		
 		self.toolbarbtn0=QAction(QIcon('img/open.png'),'Open',self)
 		self.toolbarbtn0.triggered.connect(self.Open)
+		self.toolbarbtn0.setShortcut('Ctrl+O')
 		self.toolbarbtn0.setToolTip('Open')
 		
 		self.toolbarbtn1=QAction(QIcon('img/add.png'),'Add',self)
 		self.toolbarbtn1.triggered.connect(self.Add)
+		self.toolbarbtn1.setShortcut('Ctrl+N')
 		self.toolbarbtn1.setToolTip('Add')
 
 		self.toolbarbtn2=QAction(QIcon('img/save.png'),'Save',self)
 		self.toolbarbtn2.triggered.connect(self.Save)
+		self.toolbarbtn2.setShortcut('Ctrl+S')
 		self.toolbarbtn2.setDisabled(True)
 		self.toolbarbtn2.setToolTip('Save')
 
@@ -47,7 +50,7 @@ class mainWindow(QMainWindow):
 
 		self.addToolBar(Qt.LeftToolBarArea,toolbar)
 		self.addToolBar(titlebar)
-		self.setGeometry(100,100,500,500)
+		self.setFixedSize(500,500)
 		self.setWindowTitle('Notepad')
 		toolbar.setStyleSheet('background-color:white;')
 		toolbar.setMovable(False)
@@ -60,8 +63,8 @@ class mainWindow(QMainWindow):
 		form=QFormLayout()
 		try:
 			if self.ofilename:
-				self.filename=QLineEdit(self.ofilename.text())
-				fl=open(self.ofilename.text()+'.txt','r')
+				self.filename=QLineEdit(self.ofilename)
+				fl=open(self.filepath,'r+')
 				self.container=QPlainTextEdit(str(fl.read()))
 			else:
 				self.filename=QLineEdit()
@@ -72,6 +75,7 @@ class mainWindow(QMainWindow):
 		self.filename.setPlaceholderText('File Name')
 		self.filename.setStyleSheet('''
 			width: 100%;
+			color:black;
 			background-color:white;
 			border: 1px solid #ccc;
 			margin:0px;''')
@@ -97,25 +101,23 @@ class mainWindow(QMainWindow):
 			border: 1px solid #ff6666;
 			margin:0px;''')
 		else:
-			if os.path.exists(f+'.txt'):
-				file=open(f+'.txt','w')
-				file.write(data)
-			else:
-				file=open(f+'.txt','x')
-				file.write(data)
+			try:
+				fl=open(self.filepath,'w')
+			except AttributeError:
+				self.filepath=self.filename.text()
+				fl=open(self.filepath,'w')
+			fl.write(str(self.container.toPlainText()))
 
 	def Open(self):
-		self.toolbarbtn2.setDisabled(True)
-		opn=QWidget()
-		form=QFormLayout()
-		self.ofilename=QLineEdit()
-		self.ofilename.setPlaceholderText('Filename You Want to Open')
-		obtn=QPushButton(QIcon('img/open.png'),'Open')
-		obtn.clicked.connect(self.Add)
-		form.addRow(self.ofilename)
-		form.addRow(obtn)
-		opn.setLayout(form)
-		self.setCentralWidget(opn)
+		sel=QFileDialog()
+		sel.setNameFilter("Text Files(*.txt)")
+		sel.selectNameFilter("Text Files(*.txt)")
+		if sel.exec_():
+			filname=sel.selectedFiles()
+			flname=filname[0]
+			self.ofilename=(flname.split('/'))[-1]
+			self.filepath=flname
+			self.Add()
 
 	def Home(self):
 		home=QWidget()
